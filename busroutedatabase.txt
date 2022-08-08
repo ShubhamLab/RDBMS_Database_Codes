@@ -1,0 +1,452 @@
+create table route(rno int primary key,source varchar(20),destination varchar(20),nstations int);
+NOTICE:  CREATE TABLE / PRIMARY KEY will create implicit index "route_pkey" for table "route"
+CREATE TABLE
+bcasy56=> create table bus(bno int primary key,capacity int,depotname varchar(20),rno int references route(rno) on delete cascade on update cascade);
+NOTICE:  CREATE TABLE / PRIMARY KEY will create implicit index "bus_pkey" for table "bus"
+CREATE TABLE
+bcasy56=> create table driver(dno int primary key,dname varchar(20),lno int,address varchar(20),age int,salary float);
+NOTICE:  CREATE TABLE / PRIMARY KEY will create implicit index "driver_pkey" for table "driver"
+CREATE TABLE
+bcasy56=> create table bus_driver(bno int references bus(bno) on delete cascade on update cascade,dno int references driver(dno) on delete cascade on update cascade);
+CREATE TABLE
+bcasy56=> \d bus
+              Table "public.bus"
+  Column   |         Type          | Modifiers 
+-----------+-----------------------+-----------
+ bno       | integer               | not null
+ capacity  | integer               | 
+ depotname | character varying(20) | 
+ rno       | integer               | 
+Indexes:
+    "bus_pkey" PRIMARY KEY, btree (bno)
+Foreign-key constraints:
+    "bus_rno_fkey" FOREIGN KEY (rno) REFERENCES route(rno) ON UPDATE CASCADE ON DELETE CASCADE
+Referenced by:
+    TABLE "bus_driver" CONSTRAINT "bus_driver_bno_fkey" FOREIGN KEY (bno) REFERENCES bus(bno) ON UPDATE CASCADE ON DELETE CASCADE
+
+bcasy56=> \d driver
+            Table "public.driver"
+ Column  |         Type          | Modifiers 
+---------+-----------------------+-----------
+ dno     | integer               | not null
+ dname   | character varying(20) | 
+ lno     | integer               | 
+ address | character varying(20) | 
+ age     | integer               | 
+ salary  | double precision      | 
+Indexes:
+    "driver_pkey" PRIMARY KEY, btree (dno)
+Referenced by:
+    TABLE "bus_driver" CONSTRAINT "bus_driver_dno_fkey" FOREIGN KEY (dno) REFERENCES driver(dno) ON UPDATE CASCADE ON DELETE CASCADE
+
+bcasy56=> \d route
+              Table "public.route"
+   Column    |         Type          | Modifiers 
+-------------+-----------------------+-----------
+ rno         | integer               | not null
+ source      | character varying(20) | 
+ destination | character varying(20) | 
+ nstations   | integer               | 
+Indexes:
+    "route_pkey" PRIMARY KEY, btree (rno)
+Referenced by:
+    TABLE "bus" CONSTRAINT "bus_rno_fkey" FOREIGN KEY (rno) REFERENCES route(rno) ON UPDATE CASCADE ON DELETE CASCADE
+
+bcasy56=> \d bus_driver
+  Table "public.bus_driver"
+ Column |  Type   | Modifiers 
+--------+---------+-----------
+ bno    | integer | 
+ dno    | integer | 
+Foreign-key constraints:
+    "bus_driver_bno_fkey" FOREIGN KEY (bno) REFERENCES bus(bno) ON UPDATE CASCADE ON DELETE CASCADE
+    "bus_driver_dno_fkey" FOREIGN KEY (dno) REFERENCES driver(dno) ON UPDATE CASCADE ON DELETE CASCADE
+
+
+select * from bus;
+ bno | capacity |  depotname   | rno 
+-----+----------+--------------+-----
+ 101 |       35 | Kothrud      |   1
+ 102 |       30 | Kothrud      |   2
+ 103 |       30 | Kothrud      |   3
+ 104 |       34 | Shivajinagar |   4
+ 105 |       39 | Warje        |   5
+ 106 |       38 | Warje        |   5
+ 107 |       35 | Kothrud      |   3
+(7 rows)
+
+bcasy56=> select * from route;
+ rno |    source    | destination | nstations 
+-----+--------------+-------------+-----------
+   1 | Kothrud      | Deccan      |         5
+   2 | Kothrud      | FC          |         7
+   3 | Shivajinagar | Kothud      |         8
+   4 | Kothrud      | Warje       |         6
+   5 | Warje        | Deccan      |         9
+(5 rows)
+
+bcasy56=> select * from driver;
+ dno | dname | lno | address | age | salary 
+-----+-------+-----+---------+-----+--------
+  21 | Ram   |  51 | Pune    |  45 |  15000
+  22 | Shyam |  52 | Nashik  |  39 |  12000
+  23 | Rohan |  53 | Pune    |  33 |  20000
+  24 | Amit  |  54 | Pune    |  37 |  21000
+  25 | Ajay  |  55 | Pune    |  34 |  20000
+(5 rows)
+
+bcasy56=> select * from bus_driver;
+ bno | dno | date_of_duty | shift 
+-----+-----+--------------+-------
+ 101 |  21 | 2019-08-16   |     1
+ 102 |  22 | 2019-08-12   |     1
+ 103 |  23 | 2019-07-19   |     2
+ 104 |  24 | 2019-07-11   |     2
+ 105 |  25 | 2019-09-11   |     1
+ 106 |  23 | 2019-09-15   |     1
+ 107 |  24 | 2019-07-22   |     2
+(7 rows)
+
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+	QUERIES
+
+Q1) select dname,salary from driver where salary=(select max(salary) from driver)
+output:
+select dname,salary from driver where salary=(select max(salary) from driver);
+ dname | salary 
+-------+--------
+ Amit  |  21000
+(1 row)
+
+
+Q2) delete from bus where capacity<35
+output:
+ delete from bus where capacity<35;
+DELETE 3
+bcasy56=> select * from bus;
+ bno | capacity | depotname | rno 
+-----+----------+-----------+-----
+ 101 |       35 | Kothrud   |   1
+ 105 |       39 | Warje     |   5
+ 106 |       38 | Warje     |   5
+ 107 |       35 | Kothrud   |   3
+(4 rows)
+
+
+Q3) update driver set salary=salary+salary*0.05 where age>40
+output:
+ update driver set salary=salary+salary*0.05 where age>40;
+UPDATE 1
+bcasy56=> select * from driver;
+ dno | dname | lno | address | age | salary 
+-----+-------+-----+---------+-----+--------
+  22 | Shyam |  52 | Nashik  |  39 |  12000
+  23 | Rohan |  53 | Pune    |  33 |  20000
+  24 | Amit  |  54 | Pune    |  37 |  21000
+  25 | Ajay  |  55 | Pune    |  34 |  20000
+  21 | Ram   |  51 | Pune    |  45 |  15750
+(5 rows)
+
+
+Q4) select rno,source,destination from route,bus wherebus.capacity=35 and route.rno=bus.rno
+output:
+select route.rno,source,destination from route,bus where bus.capacity=35 and route.rno=bus.rno;
+ rno |    source    | destination 
+-----+--------------+-------------
+   1 | Kothrud      | Deccan
+   3 | Shivajinagar | Kothud
+(2 rows)
+
+
+Q5) select dname,lno from driver,bus_driver where bus_driver.shift=1 and driver.dno=bus_driver.dno INTERSECT select dname,lno from driver,bus_driver where bus_driver.shift=2 and driver.dno=bus_driver.dno;
+ dname | lno 
+-------+-----
+ Rohan |  53
+
+
+Q6) select dname from driver,bus_driver where bus_driver.shift=1 and driver.dno=bus_driver.dno and date_of_duty='2019-09-15' INTERSECT select dname from driver,bus_driver where bus_driver.shift=2 and driver.dno=bus_driver.dno and date_of_duty='2019-09-15';
+ dname 
+-------
+ Rohan
+(1 row)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+	CURSORS AND TRIGGERS
+
+Q1) create or replace function age1() returns trigger as
+'
+begin
+if new.age>18 and new.age<50 then
+raise notice ''VALID ENTRY'';
+else
+raise exception ''Age is not appropriate'';
+end if;
+return new;
+end;
+'
+language 'plpgsql';
+
+create trigger tri_age before insert or update on driver fro each row execute procedure age();
+
+output:
+create or replace function age() returns trigger as
+bcasy56-> '
+bcasy56'> begin
+bcasy56'> if new.age>18 and new.age<50 then
+bcasy56'> raise notice ''VALID ENTRY'';
+bcasy56'> else
+bcasy56'> raise exception ''Age is not appropriate'';
+bcasy56'> end if;
+bcasy56'> return new;
+bcasy56'> end;
+bcasy56'> '
+bcasy56-> language 'plpgsql';
+CREATE FUNCTION
+create trigger tri_age after insert or update on driver for each row execute procedure age();
+CREATE TRIGGER
+ insert into driver values(27,'AAA',57,'Nashik',53,12000);
+ERROR:  Age is not appropriate
+
+
+
+Q2)  create or replace function bus() returns trigger as
+'
+begin
+if(old.capacity<38) then
+raise notice ''Deleting bus no % data having capacity<38'',old.bno;
+end if;
+return null;
+end;
+'
+language 'plpgsql'
+
+create trigger tri_bus after delete on bus for each row execute procedure bus()
+
+output:
+ delete from bus where capacity<39;
+NOTICE:  Deleting bus no 101 data having capacity<38
+NOTICE:  Deleting bus no 107 data having capacity<38
+DELETE 3
+
+****Q3) same as Q1)****
+
+Q4) create or replace function driver(name text) returns int as
+'
+declare
+scur cursor for select dname,lno,age,salary from driver where dname=name;
+dname varchar(20);
+dlic int;
+dage int;
+dsal float;
+begin
+open scur;
+loop
+fetch scur into dname,dlic,dage,dsal;
+exit when not found;
+raise notice ''Name of driver is:%, license number is:%, age is:%, salary is:%'',dname,dlic,dage,dsal;
+end loop;
+close scur;
+return 1;
+end;
+'
+language 'plpgsql'
+
+output:
+select driver('Ram');
+NOTICE:  Name of driver is:Ram, license number is:51, age is:45, salary is:15750
+ driver 
+--------
+      1
+(1 row)
+
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+	STORED FUNCTION
+
+Q1) create or replace function det(dt date) returns int as
+'
+declare
+rec record;
+begin
+for rec in select dname from driver,bus_driver where bus_driver.date_of_duty=dt and driver.dno=bus_driver.dno and bus_driver.shift=1
+intersect
+select dname from driver,bus_driver where bus_driver.date_of_duty=dt and driver.dno=bus_driver.dno and bus_driver.shift=2
+loop
+raise notice ''%'',rec.dname;
+end loop;
+return 1;
+end;
+'
+language 'plpgsql'
+output:
+select det('2019-09-15');
+NOTICE:  Rohan
+ det 
+-----
+   1
+(1 row)
+
+
+
+Q2) create or replace function detail(name text) returns int as
+'
+declare
+rec record;
+begin
+for rec in select dname,lno,age,salary from driver where dname=name
+loop
+raise notice ''% % % %'',rec.dname,rec.lno,rec.age,rec.salary;
+end loop;
+return 1;
+end;
+'
+language 'plpgsql'
+output:
+select detail('Ram');
+NOTICE:  Ram 51 45 15750
+ detail 
+--------
+      1
+(1 row)
+
+
+Q3) create or replace function dri(no int,dt date) returns int as
+'
+declare
+rec record;
+begin
+for rec in select dname,bno from driver,bus_driver where bus_driver.bno=no and bus_driver.date_of_duty=dt and driver.dno=bus_driver.dno
+loop
+raise notice ''% %'',rec.dname,rec.bno;
+end loop;
+return 1;
+end;
+'
+language 'plpgsql'
+output:
+select dri(101,'2019-08-16');
+NOTICE:  Ram 101
+ dri 
+-----
+   1
+(1 row)
+
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+	VIEWS
+
+Q1) create view detail as select driver.* from driver,bus_driver where bus_driver.bno=105 and driver.dno=bus_driver.dno
+output:
+ create view detail as select driver.* from driver,bus_driver where bus_driver.bno=105 and driver.dno=bus_driver.dno;
+CREATE VIEW
+bcasy56=> select * from detail;
+ dno | dname | lno | address | age | salary 
+-----+-------+-----+---------+-----+--------
+  25 | Ajay  |  55 | Pune    |  34 |  20000
+(1 row)
+
+Q2) create view display as select distinct bus.* from route,bus where bus.rno=1 or bus.rno=2 and route.rno=bus.rno
+output:
+select * from display;
+ bno | capacity | depotname | rno 
+-----+----------+-----------+-----
+ 108 |       40 | lohegaon  |   2
+ 101 |       35 | Kothrud   |   1
+ 102 |       30 | Kothrud   |   2
+(3 rows)
+
+Q3) create view sal as select dname,salary from driver where salary=(select max(salary) from driver)
+output:
+select * from sal;
+ dname | salary 
+-------+--------
+ Amit  |  21000
+(1 row)
+
+
+Q4) create view date as select dname,bno from driver,bus_driver where bus_driver.bno=105 and bus_driver.date_of_duty='2019-09-11' and driver.dno=bus_driver.dno
+output:
+select * from date;
+ dname | bno 
+-------+-----
+ Ajay  | 105
+(1 row)
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+	EXCEPTION
+
+Q1) create or replace function tone() returns trigger as
+'
+begin
+if(new.age<18 or new.age>45) then
+raise exception ''Invalid age'';
+return new;
+end if;
+end;
+'
+language 'plpgsql'
+
+create trigger tri_tone before insert  on driver for each row execute procedure tone() 
+
+output
+insert into driver values(26,'A',56,'Pune','50',13000);
+ERROR:  Invalid age
+
+
+
+
+
+
+
+
+
+
+
+
+Q2) create or replace function aaa(no int,dt date) returns int as
+'
+declare
+rec record;
+begin
+select * into rec from bus_driver where bno=no and date_of_duty=dt;
+if not found then
+raise exception ''Invalid bus number'';
+end if;
+for rec in select dname,bno from driver,bus_driver where nus_driver.bno=no and bus_driver.date_of_duty=dt and driver.dno=bus_driver.dno
+loop
+raise notice ''% %'',rec.dname,rec.bno;
+end loop;
+return 1;
+end;
+'
+language 'plpgsql'
+output:
+select aaa(104,'2019-09-11');
+ERROR:  Invalid bus number
+

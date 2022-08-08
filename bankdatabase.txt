@@ -1,0 +1,399 @@
+create table branch(bid int primary key,bname varchar(30),bcity varchar(10));
+NOTICE: 
+ CREATE TABLE / PRIMARY KEY will create implicit index "branch_pkey" for table "branch"
+CREATE TABLE
+bcasy56=> \d branch
+           Table "public.branch"
+ Column |         Type          | Modifiers 
+--------+-----------------------+-----------
+ bid    | integer               | not null
+ bname  | character varying(30) | 
+ bcity  | character varying(10) | 
+Indexes:
+    "branch_pkey" PRIMARY KEY, btree (bid)
+
+bcasy56=> create table customer(cno int primary key,cname varchar(20),cadd varchar(35),ccity varchar(20));
+NOTICE:  CREATE TABLE / PRIMARY KEY will create implicit index "customer_pkey" for table "customer"
+CREATE TABLE
+bcasy56=> \d customer
+          Table "public.customer"
+ Column |         Type          | Modifiers 
+--------+-----------------------+-----------
+ cno    | integer               | not null
+ cname  | character varying(20) | 
+ cadd   | character varying(35) | 
+ ccity  | character varying(20) | 
+Indexes:
+    "customer_pkey" PRIMARY KEY, btree (cno)
+
+bcasy56=> create table loan_application(lno int primary key,lamtr money,lamta money,ldate date);
+NOTICE:  CREATE TABLE / PRIMARY KEY will create implicit index "loan_application_pkey" for table "loan_application"
+CREATE TABLE
+bcasy56=> \d loan_application
+Table "public.loan_application"
+ Column |  Type   | Modifiers 
+--------+---------+-----------
+ lno    | integer | not null
+ lamtr  | money   | 
+ lamta  | money   | 
+ ldate  | date    | 
+Indexes:
+    "loan_application_pkey" PRIMARY KEY, btree (lno)
+
+bcasy56=> create table ternary(bid int references branch(bid) on delete cascade on update cascade,cno int references customer(cno) on delete cascade on update cascade,lno int references loan_application(lno) on delete cascade on update cascade);
+CREATE TABLE
+bcasy56=> \d ternary
+    Table "public.ternary"
+ Column |  Type   | Modifiers 
+--------+---------+-----------
+ bid    | integer | 
+ cno    | integer | 
+ lno    | integer | 
+Foreign-key constraints:
+    "ternary_bid_fkey" FOREIGN KEY (bid) REFERENCES branch(bid) ON UPDATE CASCADE ON DELETE CASCADE
+    "ternary_cno_fkey" FOREIGN KEY (cno) REFERENCES customer(cno) ON UPDATE CASCADE ON DELETE CASCADE
+    "ternary_lno_fkey" FOREIGN KEY (lno) REFERENCES loan_application(lno) ON UPDATE CASCADE ON DELETE CASCADE
+
+bcasy56=> insert into branch values('1','MG road','Pune');
+INSERT 0 1
+bcasy56=> insert into branch values('2','JM road','Pune');
+INSERT 0 1
+bcasy56=> insert into branch values('2','JM road','Pune');
+ERROR:  duplicate key value violates unique constraint "branch_pkey"
+bcasy56=> insert into branch values('3','FC road','Pune');
+INSERT 0 1
+bcasy56=> insert into branch values('4','Camp','Pune');
+INSERT 0 1
+bcasy56=> insert into branch values('5','Kothrud','Pune');
+INSERT 0 1
+bcasy56=> select * from branch;
+ bid |  bname  | bcity 
+-----+---------+-------
+   1 | MG road | Pune
+   2 | JM road | Pune
+   3 | FC road | Pune
+   4 | Camp    | Pune
+   5 | Kothrud | Pune
+ insert into customer values('100','Anish','Kothrud','Pune');
+INSERT 0 1
+bcasy56=> insert into customer values('101','Atharva','Kothrud','Pune');
+INSERT 0 1
+bcasy56=> insert into customer values('1012','Sneha','Karve nagar','Pune');
+INSERT 0 1
+bcasy56=> insert into customer values('103','Sumit','Pimpri','Pune');
+INSERT 0 1
+bcasy56=> insert into customer values('104','Vedant','Pimpri','Pune');
+INSERT 0 1
+bcasy56=> select * from customer;
+ cno  |  cname  |    cadd     | ccity 
+------+---------+-------------+-------
+  100 | Anish   | Kothrud     | Pune
+  101 | Atharva | Kothrud     | Pune
+ 1012 | Sneha   | Karve nagar | Pune
+  103 | Sumit   | Pimpri      | Pune
+  104 | Vedant  | Pimpri      | Pune
+(5 rows)
+
+bcasy56=> insert into loan_application('50','500','400','02-09-2018');
+ERROR:  syntax error at or near "'50'"
+LINE 1: insert into loan_application('50','500','400','02-09-2018');
+                                     ^
+bcasy56=> insert into loan_application values('50','500','400','02-09-2018');
+INSERT 0 1
+bcasy56=> insert into loan_application values('51','600','600','03-05-2019');
+INSERT 0 1
+bcasy56=> insert into loan_application values('52','500','500','01-02-2017');
+INSERT 0 1
+bcasy56=> insert into loan_application values('53','300','300','08-08-2018');
+INSERT 0 1
+bcasy56=> insert into loan_application values('54','700','600','03-05-2019');
+INSERT 0 1
+bcasy56=> select * from loan_application;
+ lno |  lamtr  |  lamta  |   ldate    
+-----+---------+---------+------------
+  50 | $500.00 | $400.00 | 2018-02-09
+  51 | $600.00 | $600.00 | 2019-03-05
+  52 | $500.00 | $500.00 | 2017-01-02
+  53 | $300.00 | $300.00 | 2018-08-08
+  54 | $700.00 | $600.00 | 2019-03-05
+(5 rows)
+
+bcasy56=> insert into ternary values('1','100','50'),('2','101','51'),('3','1012','52'),('4','103','53'),('5','104','54');
+INSERT 0 5
+bcasy56=> select * from ternary;
+ bid | cno  | lno 
+-----+------+-----
+   1 |  100 |  50
+   2 |  101 |  51
+   3 | 1012 |  52
+   4 |  103 |  53
+   5 |  104 |  54
+(5 rows)
+--------------------------------------------------------------------------------------------------------------------------------------
+
+
+1)   select cname from customer where cno in (select cno from ternary where bid in (select bid from branch where bname='MG road'));
+ cname 
+-------
+ Anish
+(1 row)
+
+2)   select cname from customer where cno in (select cno from ternary where lno in (select lno from loan_application where lamtr>lamta));
+ cname  
+--------
+ Anish
+ Vedant
+(2 rows)
+
+
+3)  select max(lamtr) from loan_application;
+   max   
+---------
+ $700.00
+(1 row)
+
+4)   select sum(lamtr) from loan_application where lno in (select lno from ternary where bid in (select bid from branch where bname='Camp'));
+   sum   
+---------
+ $300.00
+(1 row)
+
+5)   select count(lno) from loan_application where lno in (select lno from ternary where bid in (select bid from branch where bname='MG road'));
+ count 
+-------
+     1
+(1 row)
+
+6)   select cname,bname from branch,customer,loan_application,ternary where customer.cno=ternary.cno and branch.bid=ternary.bid and loan_application.lno=ternary.lno and extract(month from ldate)=8;
+ cname | bname 
+-------+-------
+(0 rows)
+
+select cname,bname from branch,customer,loan_application,ternary where customer.cno=ternary.cno and branch.bid=ternary.bid and loan_application.lno=ternary.lno and extract(month from ldate)=8;
+ cname | bname 
+-------+-------
+ Sumit | Camp
+(1 row)
+
+
+-----------------------------------------------------------------------------------------------------------
+
+STORED FUNCTIONS
+
+Q1)  create function customer(text) returns int as
+'
+ Declare
+	cnt int;
+	brname alias for $1;
+Begin
+	select into cnt count(customer.cno)
+	from branch,customer,ternary
+	where customer.cno=ternary.cno and branch.bid=ternary.bid and brname=bname;
+	return cnt;
+	end;
+' language 'plpgsql';
+
+select customer('Camp');
+ customer 
+----------
+        1
+(1 row)
+
+
+Q2)  create or replace function loapproved() returns money as
+'
+Declare
+	mon money;
+Begin
+	select into mon max(lamta) from loan_application;
+	return mon;
+end;
+' 
+language 'plpgsql';
+
+CREATE FUNCTION
+bcasy56=> select loapproved();
+ loapproved 
+------------
+    $600.00
+(1 row)
+
+
+---------------------------------------------------------------------------------------------------------------------
+
+	VIEWS
+
+Q1)   create or replace view bank_view as select * from customer where cno in(select cno from ternary where lno in(select lno from loan_application where lamtr>'500'));
+CREATE VIEW
+bcasy56=> select * from bank_view;
+ cno |  cname  |  cadd   | ccity 
+-----+---------+---------+-------
+ 101 | Atharva | Kothrud | Pune
+ 104 | Vedant  | Pimpri  | Pune
+(2 rows)
+
+
+
+
+Q2)  create or replace view loan_view as select * from loan_application where lno in(select lno from ternary where bid in(select bid from branch where bname='Camp'));
+CREATE VIEW
+bcasy56=> select * from loan_view;
+ lno |  lamtr  |  lamta  |   ldate    
+-----+---------+---------+------------
+  53 | $300.00 | $300.00 | 2018-08-08
+(1 row)
+
+Q3)a)select * from bank_view;
+ cno |  cname  |  cadd   | ccity 
+-----+---------+---------+-------
+ 101 | Atharva | Kothrud | Pune
+ 104 | Vedant  | Pimpri  | Pune
+(2 rows)
+
+Q3)b) select * from loan_view where lamtr='300';
+ lno |  lamtr  |  lamta  |   ldate    
+-----+---------+---------+------------
+  53 | $300.00 | $895.78 | 2018-08-08
+(1 row)
+
+
+Q3)c)   select * from loan_application as A, loan_application as B where A.lamtr=B.lamtr and A.lno<>B.lno;
+ lno |  lamtr  |  lamta  |   ldate    | lno |  lamtr  |  lamta  |   ldate    
+-----+---------+---------+------------+-----+---------+---------+------------
+  50 | $500.00 | $400.00 | 2018-02-09 |  52 | $500.00 | $500.00 | 2017-01-02
+  52 | $500.00 | $500.00 | 2017-01-02 |  50 | $500.00 | $400.00 | 2018-02-09
+(2 rows)
+
+
+------------------------------------------------------------------------------------------------------------------
+
+	ERRORS AND EXCEPTIONS
+
+Q1)  create or replace function branch(name text) returns int as
+'
+declare
+ cnt int;
+begin
+ select into cnt count(*) from branch where bname=name;
+
+
+
+ if cnt=0 then raise ''invalid branch name'';
+end if;
+ select into cnt count(*) from branch a,customer b,ternary c where a.bname=name and a.bid=c.bid and b.cno=c.cno;
+return cnt;
+end;
+'
+ language 'plpgsql'	
+
+Output:
+select branch('Camp');
+ branch 
+--------
+      1
+(1 row)
+
+
+Q2)  create or replace function loan() returns int as
+'
+declare
+ amt money;
+begin
+ for amt in select lamta from loan_application
+ loop
+ if(amt<''500'') THEN
+ raise notice ''invalid'';
+ end if;
+ update loan_application set lamta=lamta+(0.20*lamta);
+end loop;
+ return 1;
+end;
+'
+ language 'plpgsql'
+
+output:
+create or replace function loan() returns int as
+bcasy56-> '
+bcasy56'> declare
+bcasy56'>  amt money;
+bcasy56'> begin
+bcasy56'>  for amt in select lamta from loan_application
+bcasy56'>  loop
+bcasy56'>  if(amt<''500'') THEN
+bcasy56'>  raise notice ''invalid'';
+bcasy56'>  end if;
+bcasy56'>  update loan_application set lamta=lamta+(0.20*lamta);
+bcasy56'> end loop;
+bcasy56'>  return 1;
+bcasy56'> end;
+bcasy56'> '
+bcasy56->  language 'plpgsql'
+bcasy56-> ;
+CREATE FUNCTION
+bcasy56=> select loan();
+NOTICE:  invalid
+NOTICE:  invalid
+NOTICE:  invalid
+ loan 
+------
+    1
+(1 row)
+
+--------------------------------------------------------------------------------------------------------------------
+
+	Triggers
+
+create or replace function del() returns trigger as
+'
+begin
+raise notice ''customer will be deleted'';
+return old;
+end;
+'
+language 'plpgsql'
+
+create trigger tri_customer before delete on customer
+for each row execute procedure del();
+
+
+output:
+ create or replace function del() returns trigger as
+bcasy56-> '
+bcasy56'> begin
+bcasy56'> raise notice ''customer will be deleted'';
+bcasy56'> return old;
+bcasy56'> end;
+bcasy56'> '
+bcasy56-> language 'plpgsql';
+CREATE FUNCTION
+
+create trigger tri_customer before delete on customer
+for each row execute procedure del();
+CREATE TRIGGER
+bcasy56=> delete from customer where cno='101';
+NOTICE:  customer will be deleted
+DELETE 1
+
+
+create or replace function customer() returns trigger as
+'
+declare
+ amt money;
+begin
+ select into amt lamtr from loan_application where lno in(select lno from loan_application where lno in(select lno from ternary where bid in(select bid from ternary where bid in(select bid from branch where bname=''Camp''))));
+if(amt<''1000'' or amt>''1000000'') then
+raise notice ''it is not valid'';
+return old;
+end if;
+end;
+'
+language 'plpgsql';
+
+create trigger tri_cust before insert on ternary for each row execute procedure customer();
+ 
+ 
+
+		
+
+
+

@@ -1,0 +1,420 @@
+create table cities(city varchar(20) primary key,state varchar(20));NOTICE:  CREATE TABLE / PRIMARY KEY will create implicit index "cities_pkey" for table "cities"
+CREATE TABLE
+bcasy56=> create table warehouse(wid int primary key,wname varchar(20),location varchar(20),city varchar(20) references cities(city)on delete cascade on update cascade);
+NOTICE:  CREATE TABLE / PRIMARY KEY will create implicit index "warehouse_pkey" for table "warehouse"
+CREATE TABLE
+bcasy56=> create table stores(sid int primary key,store_name varchar(20),location_city varchar(20));
+NOTICE:  CREATE TABLE / PRIMARY KEY will create implicit index "stores_pkey" for table "stores"
+CREATE TABLE
+bcasy56=> drop table stores;
+DROP TABLE
+bcasy56=> create table stores(sid int primary key,store_name varchar(20),location_city varchar(20),wid int references warehouse(wid) on delete cascade on update cascade);
+NOTICE:  CREATE TABLE / PRIMARY KEY will create implicit index "stores_pkey" for table "stores"
+CREATE TABLE
+bcasy56=> create table customer(eno int primary key,cname varchar(50),addr varchar(30),cu_city varchar(20));
+ERROR:  relation "customer" already exists
+bcasy56=> create table cust(eno int primary key,cname varchar(50),addr varchar(30),cu_city varchar(20));
+NOTICE:  CREATE TABLE / PRIMARY KEY will create implicit index "cust_pkey" for table "cust"
+CREATE TABLE
+
+
+NOTICE:  CREATE TABLE / PRIMARY KEY will create implicit index "orders_pkey" for table "orders"
+CREATE TABLE
+bcasy56=> create table item(itemno int primary key,description text,weight decimal(5,2),cost decimal(5,2));
+NOTICE:  CREATE TABLE / PRIMARY KEY will create implicit index "item_pkey" for table "item"
+CREATE TABLE
+bcasy56=> create table item_order(itemno int references item(itemno) on delete cascade on update cascade,ono int references orders(ono) on delete cascade on update cascade,primary key(itemno,ono),ordered_quantity int);
+NOTICE:  CREATE TABLE / PRIMARY KEY will create implicit index "item_order_pkey" for table "item_order"
+CREATE TABLE
+
+bcasy56=> create table stores_item(sid int references stores(sid) on delete cascade on update cascade,itemno int references item(itemno) on delete cascade on update cascade,primary key(sid,itemno),quantity int);
+NOTICE:  CREATE TABLE / PRIMARY KEY will create implicit index "stores_item_pkey" for table "stores_item"
+CREATE TABLE
+bcasy56=> insert into cities values('Pune','Maharashtra');
+INSERT 0 1
+bcasy56=> insert into cities values('Mumbai','Maharashtra');
+INSERT 0 1
+bcasy56=> insert into cities values('Lucknow','UP');
+INSERT 0 1
+bcasy56=> insert into cities values('Nashik','Maharashtra');
+INSERT 0 1
+bcasy56=> insert into cities values('Varanasi','UP');
+INSERT 0 1
+bcasy56=> insert into warehouse values(1,'A','Wagholi');
+INSERT 0 1
+bcasy56=> insert into warehouse values(2,'B','Dadar','Mumbai');
+INSERT 0 1
+bcasy56=> insert into warehouse values(3,'C','Indranagar','Lucknow');
+INSERT 0 1
+bcasy56=> insert into warehouse values(4,'D','Gangapur','Nashik');
+INSERT 0 1
+bcasy56=> insert into warehouse values(5,'E','Ghazipur','Varanasi');
+INSERT 0 1
+bcasy56=> insert into warehouse values(6,'F','Kothrud','Pune');
+INSERT 0 1
+bcasy56=> insert into warehouse values(7,'G','Kothrud','Pune');
+INSERT 0 1
+bcasy56=> select * from cities;
+   city   |    state    
+----------+-------------
+ Pune     | Maharashtra
+ Mumbai   | Maharashtra
+ Lucknow  | UP
+ Nashik   | Maharashtra
+ Varanasi | UP
+(5 rows)
+
+bcasy56=> select * from warehouse;
+ wid | wname |  location  |   city   
+-----+-------+------------+----------
+   1 | A     | Wagholi    | 
+   2 | B     | Dadar      | Mumbai
+   3 | C     | Indranagar | Lucknow
+   4 | D     | Gangapur   | Nashik
+   5 | E     | Ghazipur   | Varanasi
+   6 | F     | Kothrud    | Pune
+   7 | G     | Kothrud    | Pune
+(7 rows)
+
+bcasy56=> select * from stores;
+ sid | store_name | location_city | wid 
+-----+------------+---------------+-----
+(0 rows)
+
+bcasy56=> insert into stores values(11,'Vijay','Pimpri',1);
+INSERT 0 1
+bcasy56=> insert into stores values(12,'Nayan','PSR',2);
+INSERT 0 1
+bcasy56=> insert into stores values(13,'Bala','Vidya',3);
+INSERT 0 1
+bcasy56=> insert into stores values(14,'Om','Deccan',4);
+INSERT 0 1
+bcasy56=> insert into stores values(15,'Anand','Baner',5);
+INSERT 0 1
+bcasy56=> insert into stores values(16,'Walnut','Peth',6);
+INSERT 0 1
+bcasy56=> insert into stores values(17,'Avanti','Vcomplex',7);
+INSERT 0 1
+bcasy56=> select * from stores;
+ sid | store_name | location_city | wid 
+-----+------------+---------------+-----
+  11 | Vijay      | Pimpri        |   1
+  12 | Nayan      | PSR           |   2
+  13 | Bala       | Vidya         |   3
+  14 | Om         | Deccan        |   4
+  15 | Anand      | Baner         |   5
+  16 | Walnut     | Peth          |   6
+  17 | Avanti     | Vcomplex      |   7
+(7 rows)
+
+bcasy56=> insert into stores values(18,'Durga','Katraj',1);
+INSERT 0 1
+bcasy56=> insert into stores values(19,'Sheetal','Warje',2);
+INSERT 0 1
+bcasy56=> select * from cust;
+ eno | cname | addr | cu_city 
+-----+-------+------+---------
+(0 rows)
+
+bcasy56=> insert into cust values(1,'Shubham','Kothrud','Pune');
+INSERT 0 1
+bcasy56=> insert into cust values(2,'Aditya','Kothrud','Pune');
+INSERT 0 1
+bcasy56=> insert into cust values(3,'Pandit','Deccan','Pune');
+INSERT 0 1
+bcasy56=> insert into cust values(4,'Soham','Ideal colony','Pune');
+INSERT 0 1
+bcasy56=> insert into cust values(5,'Abhishek','Deccan','Pune');
+INSERT 0 1
+bcasy56=> select * from cust;
+ eno |  cname   |     addr     | cu_city 
+-----+----------+--------------+---------
+   1 | Shubham  | Kothrud      | Pune
+   2 | Aditya   | Kothrud      | Pune
+   3 | Pandit   | Deccan       | Pune
+   4 | Soham    | Ideal colony | Pune
+   5 | Abhishek | Deccan       | Pune
+(5 rows)
+
+
+                  
+bcasy56=> insert into orders values(21,'2019-05-25',1);
+INSERT 0 1
+bcasy56=> insert into orders values(22,'2019-07-28',2);
+INSERT 0 1
+bcasy56=> insert into orders values(23,'2019-03-13',3);
+INSERT 0 1
+bcasy56=> insert into orders values(24,'2019-09-16',4);
+INSERT 0 1
+bcasy56=> insert into orders values(25,'2019-06-22',5);
+INSERT 0 1
+bcasy56=> insert into orders values(26,'2019-08-29',1);
+INSERT 0 1
+bcasy56=> insert into orders values(27,'2019-04-05',2);
+INSERT 0 1
+bcasy56=> select * from orders;
+ ono |   odate    | eno 
+-----+------------+-----
+  21 | 2019-05-25 |   1
+  22 | 2019-07-28 |   2
+  23 | 2019-03-13 |   3
+  24 | 2019-09-16 |   4
+  25 | 2019-06-22 |   5
+  26 | 2019-08-29 |   1
+  27 | 2019-04-05 |   2
+(7 rows)
+
+bcasy56=> select * from item;
+ itemno | description | weight | cost 
+--------+-------------+--------+------
+(0 rows)
+
+bcasy56=> insert into item values(31,'Metal','25.50','530.56');
+INSERT 0 1
+bcasy56=> insert into item values(32,'Steel','20.09','340.16');
+INSERT 0 1
+bcasy56=> insert into item values(33,'Cement','10.09','400.26');
+INSERT 0 1
+bcasy56=> insert into item values(34,'Rods','5.11','123.45');
+INSERT 0 1
+bcasy56=> insert into item values(35,'Sand','22.02','250.18');
+INSERT 0 1
+bcasy56=> select * from item;
+ itemno | description | weight |  cost  
+--------+-------------+--------+--------
+     31 | Metal       |  25.50 | 530.56
+     32 | Steel       |  20.09 | 340.16
+     33 | Cement      |  10.09 | 400.26
+     34 | Rods        |   5.11 | 123.45
+     35 | Sand        |  22.02 | 250.18
+(5 rows)
+
+bcasy56=> select * from item_order;
+ itemno | ono | ordered_quantity 
+--------+-----+------------------
+(0 rows)
+
+bcasy56=> insert into item_order values(31,21,5);
+INSERT 0 1
+bcasy56=> insert into item_order values(32,22,6);
+INSERT 0 1
+bcasy56=> insert into item_order values(33,23,7);
+INSERT 0 1
+bcasy56=> insert into item_order values(34,24,8);
+INSERT 0 1
+bcasy56=> insert into item_order values(35,25,9);
+INSERT 0 1
+bcasy56=> insert into item_order values(31,26,10);
+INSERT 0 1
+bcasy56=> insert into item_order values(33,22,11);
+INSERT 0 1
+bcasy56=> select * from item_order;
+ itemno | ono | ordered_quantity 
+--------+-----+------------------
+     31 |  21 |                5
+     32 |  22 |                6
+     33 |  23 |                7
+     34 |  24 |                8
+     35 |  25 |                9
+     31 |  26 |               10
+     33 |  22 |               11
+(7 rows)
+
+bcasy56=> select * from stores_item;
+ sid | itemno | quantity 
+-----+--------+----------
+(0 rows)
+
+bcasy56=> insert into stores_item values(11,31,3);
+INSERT 0 1
+bcasy56=> insert into stores_item values(12,32,4);
+INSERT 0 1
+bcasy56=> insert into stores_item values(13,33,5);
+INSERT 0 1
+bcasy56=> insert into stores_item values(14,34,6);
+INSERT 0 1
+bcasy56=> insert into stores_item values(15,35,7);
+INSERT 0 1
+bcasy56=> insert into stores_item values(13,31,8);
+INSERT 0 1
+bcasy56=> insert into stores_item values(14,32,10);
+INSERT 0 1
+bcasy56=> select * from stores_item;
+ sid | itemno | quantity 
+-----+--------+----------
+  11 |     31 |        3
+  12 |     32 |        4
+  13 |     33 |        5
+  14 |     34 |        6
+  15 |     35 |        7
+  13 |     31 |        8
+  14 |     32 |       10
+(7 rows)
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+	QUERY
+
+Q1) select description from item where weight in (select min(weight)from item)
+OUTPUT:
+select description from item where weight in (select min(weight)from item);
+ description 
+-------------
+ Rods
+(1 row)
+
+Q2) select wname from warehouse where city='Pune';
+OUTPUT:
+ wname 
+-------
+ F
+ G
+(2 rows)
+
+Q3) select ono,odate from orders where eno in(select eno from cust where cname='Shubham');
+OUTPUT:
+ ono |   odate    
+-----+------------
+  21 | 2019-05-25
+  26 | 2019-08-29
+(2 rows)
+
+
+Q4) select distinct wname from warehouse where wid in(select wid from stores group by wid having count(sid)>=all(select count(sid) from stores group by wid));
+ wname 
+-------
+ B
+ A
+(2 rows)
+
+
+Q5) select itemno from item_order where itemno in(select itemno from item_order group by itemno having count(itemno)<=all(select count(itemno) from item_order group by itemno));
+ itemno 
+--------
+     32
+     34
+     35
+(3 rows)
+
+
+Q6) select distinct cname,addr,cu_city,ono,odate from cust,orders where cust.eno=orders.eno;
+  cname   |     addr     | cu_city | ono |   odate    
+----------+--------------+---------+-----+------------
+ Soham    | Ideal colony | Pune    |  24 | 2019-09-16
+ Aditya   | Kothrud      | Pune    |  27 | 2019-04-05
+ Shubham  | Kothrud      | Pune    |  21 | 2019-05-25
+ Pandit   | Deccan       | Pune    |  23 | 2019-03-13
+ Abhishek | Deccan       | Pune    |  25 | 2019-06-22
+ Aditya   | Kothrud      | Pune    |  22 | 2019-07-28
+ Shubham  | Kothrud      | Pune    |  26 | 2019-08-29
+(7 rows)
+
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+	VIEWS
+
+Q1) create view v1 as select * from stores where wid in(select wid from warehouse where wname='B')
+OUTPUT:
+select * from v1;
+ sid | store_name | location_city | wid 
+-----+------------+---------------+-----
+  12 | Nayan      | PSR           |   2
+  19 | Sheetal    | Warje         |   2
+(2 rows)
+
+Q2) create view v2 as select * from cust where eno in(select eno from orders where odate='2019-05-25')
+OUTPUT:
+select * from v2;
+ eno |  cname  |  addr   | cu_city 
+-----+---------+---------+---------
+   1 | Shubham | Kothrud | Pune
+(1 row)
+
+Q3) create or replace view v33 as select store_name from stores where wid in(select wid from warehouse where city='Nashik')
+OUTPUT:
+select * from v33;
+ store_name 
+------------
+ Om
+(1 row)
+
+Q4) create or replace view v4 as select cname from cust,orders where cust.eno=orders.eno and odate='2019-07-28'
+OUTPUT:
+select * from v4;
+ cname  
+--------
+ Aditya
+(1 row)
+
+
+Q5) create or replace view v5 as select * from orders where eno in(select eno from cust where cname='Pandit')
+OUTPUT:
+select * from v5;
+ ono |   odate    | eno 
+-----+------------+-----
+  23 | 2019-03-13 |   3
+(1 row)
+
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+	CURSORS AND TRIGGERS
+
+Q1) create or replace function f1(text) returns int as
+'
+declare
+nm int;
+itm text;
+scur cursor for select wid from warehouse where city=$1;
+begin
+open scur;
+loop
+fetch scur into nm;
+exit when not found;
+raise notice ''Warehouse for city % are %'',$1,nm;
+end loop;
+return 1;
+end;
+'
+language 'plpgsql'
+
+OUTPUT:
+ select f1('Pune');
+NOTICE:  Warehouse for city Pune are 6
+NOTICE:  Warehouse for city Pune are 7
+ f1 
+----
+  1
+(1 row)
+
+
+Q1)  create or replace function fon() returns int as
+'
+declare
+nm int;
+itm text;
+scur cursor for select itemno,description from item where cost between 400 and 600;
+begin
+open scur;
+loop
+fetch scur into nm,itm;
+exit when not found;
+raise notice ''Item no whose cost is between 400 and 600 is % and name is %'',nm,itm;
+end loop;
+return 1;
+end;
+'
+language 'plpgsql'
+
+OUTPUT:
+ select fon();
+NOTICE:  Item no whose cost is between 400 and 600 is 31 and name is Metal
+NOTICE:  Item no whose cost is between 400 and 600 is 33 and name is Cement
+ fon 
+-----
+   1
+(1 row)
+
+select itemno from item_order where itemno in(select itemno from item_order group by itemno having count(itemno)<=all(select count(itemno) from item_order group by itemno))
+

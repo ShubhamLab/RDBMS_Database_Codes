@@ -1,0 +1,495 @@
+ create table student(sno int primary key,sname varchar(30),sclass varchar(10),saddr varchar(50));
+NOTICE:  CREATE TABLE / PRIMARY KEY will create implicit index "student_pkey" for table "student"
+CREATE TABLE
+bcasy56=> \d student
+           Table "public.student"
+ Column |         Type          | Modifiers 
+--------+-----------------------+-----------
+ sno    | integer               | not null
+ sname  | character varying(30) | 
+ sclass | character varying(10) | 
+ saddr  | character varying(50) | 
+Indexes:
+    "student_pkey" PRIMARY KEY, btree (sno)
+
+bcasy56=> create table teacher(tno int primary key,tname varchar(20),qualification varchar(15),experience int);
+NOTICE:  CREATE TABLE / PRIMARY KEY will create implicit index "teacher_pkey" for table "teacher"
+CREATE TABLE
+bcasy56=> \d teacher
+              Table "public.teacher"
+    Column     |         Type          | Modifiers 
+---------------+-----------------------+-----------
+ tno           | integer               | not null
+ tname         | character varying(20) | 
+ qualification | character varying(15) | 
+ experience    | integer               | 
+Indexes:
+    "teacher_pkey" PRIMARY KEY, btree (tno)
+
+bcasy56=> create table stu_teach(sno int references student(sno) on delete cascade on update cascade,tno int references teacher(tno) on delete cascade on update cascade,subname varchar(15),marks int);
+CREATE TABLE
+bcasy56=> \d stu_teach
+          Table "public.stu_teach"
+ Column  |         Type          | Modifiers 
+---------+-----------------------+-----------
+ sno     | integer               | 
+ tno     | integer               | 
+ subname | character varying(15) | 
+ marks   | integer               | 
+Foreign-key constraints:
+    "stu_teach_sno_fkey" FOREIGN KEY (sno) REFERENCES student(sno) ON UPDATE CASCADE ON DELETE CASCADE
+    "stu_teach_tno_fkey" FOREIGN KEY (tno) REFERENCES teacher(tno) ON UPDATE CASCADE ON DELETE CASCADE
+
+insert into student values('1','Ram','FY','Kothrud');
+INSERT 0 1
+bcasy56=> insert into student values('2','Shyam','FY','Karve nagar'); select tname from teacher where tno in (select tno from stu_teach where sno in (select sno from student where sname='Suresh'));
+  tname   
+----------
+ Kulkarni
+(1 row)
+
+INSERT 0 1
+bcasy56=> insert into student values('3','Suresh','SY','Pimpri');
+INSERT 0 1
+bcasy56=> insert into student values('4','Ramu','TY','Aundh');
+INSERT 0 1
+bcasy56=> insert into student values('5','Shamu','TY','Kothrud');
+INSERT 0 1
+bcasy56=> select * from student;
+ sno | sname  | sclass |    saddr    
+-----+--------+--------+-------------
+   1 | Ram    | FY     | Kothrud
+   2 | Shyam  | FY     | Karve nagar
+   3 | Suresh | SY     | Pimpri
+   4 | Ramu   | TY     | Aundh
+   5 | Shamu  | TY     | Kothrud
+(5 rows)
+insert into teacher values('20','Kumar','MTech','3');
+INSERT 0 1
+bcasy56=> insert into teacher values('21','Kapoor','PhD','2');
+INSERT 0 1
+bcasy56=> insert into teacher values('22','Kulkarni','BTech','4');
+INSERT 0 1
+bcasy56=> insert into teacher values('23','Jadhav','MSc','2');
+INSERT 0 1
+bcasy56=> insert into teacher values('23','Shevde','MSc','5');
+ERROR:  duplicate key value violates unique constraint "teacher_pkey"
+bcasy56=> insert into teacher values('24','Shevde','MSc','5');
+INSERT 0 1
+bcasy56=> select * from teacher;
+ tno |  tname   | qualification | experience 
+-----+----------+---------------+------------
+  20 | Kumar    | MTech         |          3
+  21 | Kapoor   | PhD           |          2
+  22 | Kulkarni | BTech         |          4
+  23 | Jadhav   | MSc           |          2
+  24 | Shevde   | MSc           |          5
+(5 rows)
+
+bcasy56=> insert into stu_teach('1','20','Physics','50');
+ERROR:  syntax error at or near "'1'"
+LINE 1: insert into stu_teach('1','20','Physics','50');
+                              ^
+bcasy56=> insert into stu_teach values('1','20','Physics','50');
+INSERT 0 1
+bcasy56=> insert into stu_teach values('2','21','Chemistry','60');
+INSERT 0 1
+bcasy56=> insert into stu_teach values('3','22','Maths','70');
+INSERT 0 1
+bcasy56=> insert into stu_teach values('4,'23','Biology','40');
+bcasy56'> ^C
+bcasy56=> insert into stu_teach values('4','23','Biology','40');
+INSERT 0 1
+bcasy56=> insert into stu_teach values('5','24','CS','80');
+INSERT 0 1
+bcasy56=> select * from stu_teach;
+ sno | tno |  subname  | marks 
+-----+-----+-----------+-------
+   1 |  20 | Physics   |    50
+   2 |  21 | Chemistry |    60
+   3 |  22 | Maths     |    70
+   4 |  23 | Biology   |    40
+   5 |  24 | CS        |    80
+(5 rows)
+---------------------------------------------------------------------------------------------------------------------------------------
+
+1)  bcasy56=> select tname from teacher where experience=(select min(experience) from teacher);
+ tname  
+--------
+ Kapoor
+ Jadhav
+(2 rows)
+
+2) select count(tname) from teacher where qualification='PhD';
+ count 
+-------
+     1
+(1 row)
+
+5)  select tname from teacher where tno in (select tno from stu_teach where sno in (select sno from student where sname='Suresh'));
+  tname   
+----------
+ Kulkarni
+(1 row)
+
+7)  select sname from student where sno in (select sno from stu_teach where marks in(select max(marks) from stu_teach where tno in(select tno from teacher where tname='Kumar')));
+ sname 
+-------
+ Ram
+(1 row)
+
+6) select count(student.sno),tname from student,teacher,stu_teach where teacher.tno=stu_teach.tno and student.sno=stu_teach.sno group by tname;
+ count |  tname   
+-------+----------
+     1 | Shevde
+     1 | Kumar
+     1 | Kulkarni
+     1 | Jadhav
+     1 | Kapoor
+(5 rows)
+
+4)  select distinct tname,subname from teacher,stu_teach where teacher.tno=stu_teach.tno;
+  tname   |  subname  
+----------+-----------
+ Kapoor   | Chemistry
+ Kulkarni | Maths
+ Kumar    | Physics
+ Shevde   | CS
+ Jadhav   | Biology
+(5 rows)
+
+
+3)  select sname,subname from student,stu_teach where student.sno in(select sno from stu_teach where tno in(select tno from teacher where tname='Kumar')) and stu_teach.subname in(select subname from stu_teach where tno in(select tno from teacher where tname='Kumar'));
+ sname | subname 
+-------+---------
+ Ram   | Physics
+(1 row)
+
+
+----------------------------------------------------------------------------------------------------------------------------------
+
+	STORED FUNCTIONS
+	
+create or replace function teacher(text) returns int as
+'
+Declare
+	
+	cnt int;
+Begin
+	select into cnt count(student.sno) from student,teacher,stu_teach where student.sno=stu_teach.sno and teacher.tno=stu_teach.tno and tname=$1;
+return cnt;
+end;
+'
+language 'plpgsql';
+select teacher('Shevde');
+ teacher 
+---------
+       1
+(1 row)
+
+
+create or replace function  teach(text) returns int as
+'
+Declare
+	snum int;
+Begin
+	select into snum count(teacher.tno) from teacher,student,stu_teach where teacher.tno=stu_teach.tno and subname=$1;
+	return snum;
+end;
+'
+language 'plpgsql'
+
+select teach('CS');
+ teach 
+-------
+     5
+(1 row)
+
+
+
+create or replace function total(text) returns int as
+'
+Declare
+	stot int;
+Begin
+	select into stot sum(stu_teach.marks) from student,stu_teach where student.sno=stu_teach.sno and sname=$1;
+	return stot;
+End;
+'
+language 'plpgsql'
+
+select total('Ram');
+ total 
+-------
+    50
+(1 row)
+
+------------------------------------------------------------------------------------------------------------------
+
+	VIEWS
+	
+Q1)  create or replace view teacher_view as select teacher.tno,tname,qualification,experience from teacher,stu_teach where teacher.tno=stu_teach.tno and subname='Maths';
+CREATE VIEW
+bcasy56=> select * from teacher_view;
+ tno |  tname   | qualification | experience 
+-----+----------+---------------+------------
+  22 | Kulkarni | BTech         |          4
+(1 row)
+
+
+
+
+
+
+Q2)  create or replace view student_view as select student.sno,sname,sclass,saddr from student,stu_teach,teacher where student.sno=stu_teach.sno and teacher.tno=stu_teach.tno and experience>'3';
+CREATE VIEW
+bcasy56=> select * from student_view;
+ sno | sname  | sclass |  saddr  
+-----+--------+--------+---------
+   3 | Suresh | SY     | Pimpri
+   5 | Shamu  | TY     | Kothrud
+(2 rows)
+
+
+
+Q3)b) select * from teacher_view where experience in(select max(experience) from teacher_view);
+tno | tname  | qualification | experience 
+-----+--------+---------------+------------
+  25 | Pathak | MTech         |          8
+(1 row)
+
+
+
+
+Q3)b)  select distinct(sname),sclass from student_view,teacher where sclass='SY' and experience>'3';
+ sname  | sclass 
+--------+--------
+ Suresh | SY
+(1 row)
+
+
+---------------------------------------------------------------------------------------------------------------------------------
+
+	CURSORS
+create or replace function stud1(text) returns int as
+'
+Declare
+stot text;
+ttot text;
+scur cursor(name text) for select distinct tname,subname from student,teacher,stu_teach where teacher.tno=stu_teach.tno and student.sno=stu_teach.tno and sname=name; 
+begin
+open scur($1);
+loop
+fetch scur into stot,ttot;
+exit when not found;
+raise notice ''Teacher name with their subjects=% %'',ttot,stot;
+end loop;
+close scur;
+return 1;
+end;
+'
+language 'plpgsql'
+
+
+
+
+create or replace function stu() returns int as
+'
+declare
+ sto text;
+ tto text;
+ scur cursor for select count(subname),tname from teacher,stu_teach where teacher.tno=stu_teach.tno group by tname;
+begin
+open scur;
+loop
+fetch scur into tto,sto;
+exit when not found;
+raise notice ''teacher name with their subjects=% %'',tto,sto;
+end loop;
+close scur;
+return 1;
+end;
+'
+language 'plpgsql'
+
+
+CREATE FUNCTION
+bcasy56=> select stu();
+NOTICE:  teacher name with their subjects=2 Shevde
+NOTICE:  teacher name with their subjects=1 Pathak
+NOTICE:  teacher name with their subjects=1 Kulkarni
+NOTICE:  teacher name with their subjects=1 Jadhav
+NOTICE:  teacher name with their subjects=1 Kapoor
+ stu 
+-----
+   1
+(1 row)
+
+
+
+
+
+
+
+
+--------------------------------------------------------------------------------------------------------------------
+
+	ERRORS AND EXCEPTIONS
+Q1)
+create or replace function teach(text) returns int as
+'
+Declare
+ cnt int;
+Begin
+ select into cnt count(student.sno) from student,teacher,stu_teach where student.sno=stu_teach.sno and teacher.tno=stu_teach.tno and tname=$1;
+
+if(cnt=0) then
+raise exception ''teacher name is invalid'';
+end if;
+return cnt;
+end;
+'
+ language 'plpgsql' 
+
+output:
+	select teach('Kumar');
+	 teach 
+	-------
+	     1
+	(1 row)
+
+	bcasy56=> select teach('Athavle');
+	ERROR:  teacher name is invalid
+
+
+
+
+
+
+
+
+Q2)
+create or replace function update() returns int as
+'
+Declare
+n int;
+Begin
+for n in select marks from stu_teach
+loop
+if(n>=40 and n<=50) then
+raise notice ''Marks have been updated'';
+update stu_teach set marks=75 where marks=n;
+end if;
+end loop;
+return 1;
+end;
+'
+language 'plpgsql'
+
+output:
+	select update();
+	NOTICE:  Marks have been updated
+	NOTICE:  Marks have been updated
+	 update 
+	--------
+	      1
+	(1 row)
+
+	bcasy56=> select * from stu_teach;
+	 sno | tno |  subname  | marks 
+	-----+-----+-----------+-------
+	   2 |  21 | Chemistry |    60
+	   3 |  22 | Maths     |    70
+	   5 |  24 | CS        |    80	
+	   1 |  20 | Physics   |    75
+	   4 |  23 | Biology   |    75
+	(5 rows)
+
+
+---------------------------------------------------------------------------------------------------------------------
+
+	TRIGGERS
+
+Q1)
+
+create or replace function stud() returns trigger as
+'
+begin
+raise notice ''Student record is being deleted'';
+return old;
+end;
+'
+language 'plpgsql'
+
+create trigger tri_stu before delete on student for each row execute procedure stud()
+
+
+Output:
+
+	create or replace function stud() returns trigger as
+bcasy56-> '
+bcasy56'> begin
+bcasy56'> raise notice ''Student record is being deleted'';
+bcasy56'> return old;
+bcasy56'> end;
+bcasy56'> '
+bcasy56-> language 'plpgsql';
+CREATE FUNCTION
+bcasy56=> create trigger tri_stu before delete on student for each row execute procedure stud();
+CREATE TRIGGER
+bcasy56=> delete from student where sno='1';
+NOTICE:  Student record is being deleted
+DELETE 1
+bcasy56=> select * from student;
+ sno | sname  | sclass |    saddr    
+-----+--------+--------+-------------
+   2 | Shyam  | FY     | Karve nagar
+   3 | Suresh | SY     | Pimpri
+   4 | Ramu   | TY     | Aundh
+   5 | Shamu  | TY     | Kothrud
+(4 rows)
+
+
+
+
+
+
+Q2)
+create or replace function nmarks() returns trigger as
+'
+begin
+if(new.marks>0 or new.marks<100) then
+raise notice ''Entered marks is valid'';
+end if;
+return new;
+end;
+'
+language 'plpgsql'
+
+create trigger tri_nmarks before insert on stu_teach for each row execute procedure nmarks()
+
+output:
+
+	create or replace function nmarks() returns trigger as
+	bcasy56-> '
+	bcasy56'> begin
+	bcasy56'> if(new.marks>0 or new.marks<100) then
+	bcasy56'> raise notice ''Entered marks is valid'';
+	bcasy56'> end if;
+	bcasy56'> return new;
+	bcasy56'> end;
+	bcasy56'> '
+	bcasy56-> language 'plpgsql';
+	CREATE FUNCTION
+
+	create trigger tri_nmarks before insert on stu_teach for each row execute procedure nmarks();
+	CREATE TRIGGER
+	bcasy56=> insert into stu_teach values('5','24','Biology','67');			
+	NOTICE:  Entered marks is valid
+	INSERT 0 1
+
+
+
+
+
+

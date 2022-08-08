@@ -1,0 +1,779 @@
+create table actor(aid int primary key,aname varchar(30),arole varchar(30),acharges money,aadd varchar(30));
+NOTICE:  CREATE TABLE / PRIMARY KEY will create implicit index "actor_pkey" for table "actor"
+CREATE TABLE
+bcasy56=> \d actor
+             Table "public.actor"
+  Column  |         Type          | Modifiers 
+----------+-----------------------+-----------
+ aid      | integer               | not null
+ aname    | character varying(30) | 
+ arole    | character varying(30) | 
+ acharges | money                 | 
+ aadd     | character varying(30) | 
+Indexes:
+    "actor_pkey" PRIMARY KEY, btree (aid)
+
+bcasy56=> create table movie(mid int primary key,mname varchar(25),m_release_year int,budget money,aid int references actor(aid) on delete cascade on update cascade);
+NOTICE:  CREATE TABLE / PRIMARY KEY will create implicit index "movie_pkey" for table "movie"
+CREATE TABLE
+bcasy56=> \d movie
+                Table "public.movie"
+     Column     |         Type          | Modifiers 
+----------------+-----------------------+-----------
+ mid            | integer               | not null
+ mname          | character varying(25) | 
+ m_release_year | integer               | 
+ budget         | money                 | 
+ aid            | integer               | 
+Indexes:
+    "movie_pkey" PRIMARY KEY, btree (mid)
+Foreign-key constraints:
+    "movie_aid_fkey" FOREIGN KEY (aid) REFERENCES actor(aid) ON UPDATE CASCADE ON DELETE CASCADE
+
+bcasy56=> create table producer(pid int primary key,pname varchar(30),padd varchar(30),mid int references movie(mid) on delete cascade on update cascade);
+NOTICE:  CREATE TABLE / PRIMARY KEY will create implicit index "producer_pkey" for table "producer"
+CREATE TABLE
+bcasy56=> \d producer
+          Table "public.producer"
+ Column |         Type          | Modifiers 
+--------+-----------------------+-----------
+ pid    | integer               | not null
+ pname  | character varying(30) | 
+ padd   | character varying(30) | 
+ mid    | integer               | 
+Indexes:
+    "producer_pkey" PRIMARY KEY, btree (pid)
+Foreign-key constraints:
+    "producer_mid_fkey" FOREIGN KEY (mid) REFERENCES movie(mid) ON UPDATE CASCADE ON DELETE CASCADE
+
+bcasy56=> insert into actor values('1','Khan','Hero','500','Mumbai');
+INSERT 0 1
+bcasy56=> insert into actor values('2','Kapoor','Villan','300','Mumbai');
+INSERT 0 1
+bcasy56=> insert into actor values('3','Kumar','Hero','600','Pune');
+INSERT 0 1
+bcasy56=> insert into actor values('4','Dixit','Hero','700','Pune');
+INSERT 0 1
+bcasy56=> insert into actor values('5','Deshmukh','Hero','600','Pune');
+INSERT 0 1
+bcasy56=> select * from actor;
+ aid |  aname   | arole  | acharges |  aadd  
+-----+----------+--------+----------+--------
+   1 | Khan     | Hero   |  $500.00 | Mumbai
+   2 | Kapoor   | Villan |  $300.00 | Mumbai
+   3 | Kumar    | Hero   |  $600.00 | Pune
+   4 | Dixit    | Hero   |  $700.00 | Pune
+   5 | Deshmukh | Hero   |  $600.00 | Pune
+(5 rows)
+
+bcasy56=> insert into movie values('100','DDLJ','2000','1000','1');
+INSERT 0 1
+bcasy56=> insert into movie values('101','Robot','1999','1500','2');
+INSERT 0 1
+bcasy56=> insert into movie values('102','Ravan','2014','1100','3');
+INSERT 0 1
+bcasy56=> insert into movie values('103','Aliens','2017','1300','4');
+INSERT 0 1
+bcasy56=> insert into movie values('104','Dangal','2012','1100','5');
+INSERT 0 1
+bcasy56=> select * from movie;
+ mid | mname  | m_release_year |  budget   | aid 
+-----+--------+----------------+-----------+-----
+ 100 | DDLJ   |           2000 | $1,000.00 |   1
+ 101 | Robot  |           1999 | $1,500.00 |   2
+ 102 | Ravan  |           2014 | $1,100.00 |   3
+ 103 | Aliens |           2017 | $1,300.00 |   4
+ 104 | Dangal |           2012 | $1,100.00 |   5
+(5 rows)
+
+bcasy56=> insert into producer values('20','Anish','Pune','100');
+INSERT 0 1
+bcasy56=> insert into producer values('21','Vedant','Pune','101');
+INSERT 0 1
+bcasy56=> insert into producer values('22','Vrushank','Pune','102');
+INSERT 0 1
+bcasy56=> insert into producer values('23','Varad','Pune','103');
+INSERT 0 1
+bcasy56=> insert into producer values('24','Chinmay','Pune','104');
+INSERT 0 1
+bcasy56=> select * from producer;
+ pid |  pname   | padd | mid 
+-----+----------+------+-----
+  20 | Anish    | Pune | 100
+  21 | Vedant   | Pune | 101
+  22 | Vrushank | Pune | 102
+  23 | Varad    | Pune | 103
+  24 | Chinmay  | Pune | 104
+(5 rows)
+
+bcasy56=> insert into movie values('105','Conjuring','2017','1600','1');
+INSERT 0 1
+bcasy56=> insert into producer values('25','Sumit','Pune','100');
+INSERT 0 1
+bcasy56=> select * from actor;
+ aid |  aname   | arole  | acharges |  aadd  
+-----+----------+--------+----------+--------
+   1 | Khan     | Hero   |  $500.00 | Mumbai
+   2 | Kapoor   | Villan |  $300.00 | Mumbai
+   3 | Kumar    | Hero   |  $600.00 | Pune
+   4 | Dixit    | Hero   |  $700.00 | Pune
+   5 | Deshmukh | Hero   |  $600.00 | Pune
+(5 rows)
+
+bcasy56=> select * from movie;
+ mid |   mname   | m_release_year |  budget   | aid 
+-----+-----------+----------------+-----------+-----
+ 100 | DDLJ      |           2000 | $1,000.00 |   1
+ 101 | Robot     |           1999 | $1,500.00 |   2
+ 102 | Ravan     |           2014 | $1,100.00 |   3
+ 103 | Aliens    |           2017 | $1,300.00 |   4
+ 104 | Dangal    |           2012 | $1,100.00 |   5
+ 105 | Conjuring |           2017 | $1,600.00 |   1
+(6 rows)
+
+bcasy56=> drop table movie;
+ERROR:  cannot drop table movie because other objects depend on it
+DETAIL:  constraint producer_mid_fkey on table producer depends on table movie
+HINT:  Use DROP ... CASCADE to drop the dependent objects too.
+bcasy56=> drop table actor;
+ERROR:  cannot drop table actor because other objects depend on it
+DETAIL:  constraint movie_aid_fkey on table movie depends on table actor
+HINT:  Use DROP ... CASCADE to drop the dependent objects too.
+bcasy56=> drop table producer;
+DROP TABLE
+bcasy56=> drop table movie;]
+DROP TABLE
+bcasy56-> select * from actor;
+ERROR:  syntax error at or near "]"
+LINE 1: ]
+        ^
+bcasy56=> select * from actor;
+ aid |  aname   | arole  | acharges |  aadd  
+-----+----------+--------+----------+--------
+   1 | Khan     | Hero   |  $500.00 | Mumbai
+   2 | Kapoor   | Villan |  $300.00 | Mumbai
+   3 | Kumar    | Hero   |  $600.00 | Pune
+   4 | Dixit    | Hero   |  $700.00 | Pune
+   5 | Deshmukh | Hero   |  $600.00 | Pune
+(5 rows)
+
+bcasy56=> create table movie(mid int primary key,mname varchar(30),m_release_year int,budget money);
+NOTICE:  CREATE TABLE / PRIMARY KEY will create implicit index "movie_pkey" for table "movie"
+CREATE TABLE
+bcasy56=> create table producer(pid int primary key,pname varchar(30),padd varchar(30));
+NOTICE:  CREATE TABLE / PRIMARY KEY will create implicit index "producer_pkey" for table "producer"
+CREATE TABLE
+bcasy56=> create table actor_movie(aid int references actor(aid) on delete cascade on update cascade,mid int references movie(mid) on delete cascade on update cascade);
+CREATE TABLE
+bcasy56=> \d actor_movie
+  Table "public.actor_movie"
+ Column |  Type   | Modifiers 
+--------+---------+-----------
+ aid    | integer | 
+ mid    | integer | 
+Foreign-key constraints:
+    "actor_movie_aid_fkey" FOREIGN KEY (aid) REFERENCES actor(aid) ON UPDATE CASCADE ON DELETE CASCADE
+    "actor_movie_mid_fkey" FOREIGN KEY (mid) REFERENCES movie(mid) ON UPDATE CASCADE ON DELETE CASCADE
+
+bcasy56=> create table movie_producer(mid int references movie(mid) on delete cascade on update cascade,pid int references producer(pid) on delete cascade on update cascade);
+CREATE TABLE
+bcasy56=> \d movie_producer
+Table "public.movie_producer"
+ Column |  Type   | Modifiers 
+--------+---------+-----------
+ mid    | integer | 
+ pid    | integer | 
+Foreign-key constraints:
+    "movie_producer_mid_fkey" FOREIGN KEY (mid) REFERENCES movie(mid) ON UPDATE CASCADE ON DELETE CASCADE
+    "movie_producer_pid_fkey" FOREIGN KEY (pid) REFERENCES producer(pid) ON UPDATE CASCADE ON DELETE CASCADE
+
+bcasy56=> select * from actor;
+ aid |  aname   | arole  | acharges |  aadd  
+-----+----------+--------+----------+--------
+   1 | Khan     | Hero   |  $500.00 | Mumbai
+   2 | Kapoor   | Villan |  $300.00 | Mumbai
+   3 | Kumar    | Hero   |  $600.00 | Pune
+   4 | Dixit    | Hero   |  $700.00 | Pune
+   5 | Deshmukh | Hero   |  $600.00 | Pune
+(5 rows)
+
+bcasy56=> insert into movie values('100','Dangal','2012','1100');
+INSERT 0 1
+bcasy56=> insert into movie values('101','Don','2011','1000');
+INSERT 0 1
+bcasy56=> insert into movie values('102','Ravan','2014','900');
+INSERT 0 1
+bcasy56=> insert into movie values('103','DDLJ','1999','600');
+INSERT 0 1
+bcasy56=> insert into movie values('104','Brave','2017','1300');
+INSERT 0 1
+bcasy56=> select * from movie;
+ mid | mname  | m_release_year |  budget   
+-----+--------+----------------+-----------
+ 100 | Dangal |           2012 | $1,100.00
+ 101 | Don    |           2011 | $1,000.00
+ 102 | Ravan  |           2014 |   $900.00
+ 103 | DDLJ   |           1999 |   $600.00
+ 104 | Brave  |           2017 | $1,300.00
+(5 rows)
+
+bcasy56=> select * from producer;
+ pid | pname | padd 
+-----+-------+------
+(0 rows)
+
+bcasy56=> insert into producer values('20','Anish','Pune');
+INSERT 0 1
+bcasy56=> insert into producer values('21','Vedant','Pune');
+INSERT 0 1
+bcasy56=> insert into producer values('22','Vrushank','Pune');
+INSERT 0 1
+bcasy56=> insert into producer values('23','Varad','Pune');
+INSERT 0 1
+bcasy56=> insert into producer values('24','Chinmay','Pune');
+INSERT 0 1
+bcasy56=> insert into actor_movie values('1','100');
+INSERT 0 1
+bcasy56=> insert into actor_movie values('2','101');
+INSERT 0 1
+bcasy56=> insert into actor_movie values('3','102');
+INSERT 0 1
+bcasy56=> insert into actor_movie values('4','103');
+INSERT 0 1
+bcasy56=> insert into actor_movie values('5','104');
+INSERT 0 1
+bcasy56=> insert into movie_producer values('100','20');
+INSERT 0 1
+bcasy56=> insert into movie_producer values('101','21');
+INSERT 0 1
+bcasy56=> insert into movie_producer values('102','22');
+INSERT 0 1
+bcasy56=> insert into movie_producer values('103','23');
+INSERT 0 1
+bcasy56=> insert into movie_producer values('104','24');
+INSERT 0 1
+bcasy56=> select * from actor;
+ aid |  aname   | arole  | acharges |  aadd  
+-----+----------+--------+----------+--------
+   1 | Khan     | Hero   |  $500.00 | Mumbai
+   2 | Kapoor   | Villan |  $300.00 | Mumbai
+   3 | Kumar    | Hero   |  $600.00 | Pune
+   4 | Dixit    | Hero   |  $700.00 | Pune
+   5 | Deshmukh | Hero   |  $600.00 | Pune
+(5 rows)
+
+bcasy56=> select * from movie;
+ mid | mname  | m_release_year |  budget   
+-----+--------+----------------+-----------
+ 100 | Dangal |           2012 | $1,100.00
+ 101 | Don    |           2011 | $1,000.00
+ 102 | Ravan  |           2014 |   $900.00
+ 103 | DDLJ   |           1999 |   $600.00
+ 104 | Brave  |           2017 | $1,300.00
+(5 rows)
+
+bcasy56=> select * from producer;
+ pid |  pname   | padd 
+-----+----------+------
+  20 | Anish    | Pune
+  21 | Vedant   | Pune
+  22 | Vrushank | Pune
+  23 | Varad    | Pune
+  24 | Chinmay  | Pune
+(5 rows)
+
+bcasy56=> select * from actor_movie;
+ aid | mid 
+-----+-----
+   1 | 100
+   2 | 101
+   3 | 102
+   4 | 103
+   5 | 104
+(5 rows)
+
+bcasy56=> select * from movie_producer;
+ mid | pid 
+-----+-----
+ 100 |  20
+ 101 |  21
+ 102 |  22
+ 103 |  23
+ 104 |  24
+(5 rows)
+
+bcasy56=> insert into actor_movie values('1','101');
+INSERT 0 1
+bcasy56=> insert into actor_movie values('5','103');
+INSERT 0 1
+bcasy56=> insert into movie_producer values('100','22');
+INSERT 0 1
+bcasy56=> insert into movie_producer values('103','24');
+INSERT 0 1
+bcasy56=> select * from actor_movie;
+ aid | mid 
+-----+-----
+   1 | 100
+   2 | 101
+   3 | 102
+   4 | 103
+   5 | 104
+   1 | 101
+   5 | 103
+(7 rows)
+
+bcasy56=> select * from movie_producer;
+ mid | pid 
+-----+-----
+ 100 |  20
+ 101 |  21
+ 102 |  22
+ 103 |  23
+ 104 |  24
+ 100 |  22
+ 103 |  24
+(7 rows)
+
+-----------------------------------------------------------------------------------------------------------
+
+6) select aname from actor where arole='Villan';
+ aname  
+--------
+ Kapoor
+(1 row)
+
+
+5)   select mname from movie where m_release_year>2000;
+ mname  
+--------
+ Dangal
+ Don
+ Ravan
+ Brave
+(4 rows)
+
+
+4)  select mname from movie where budget=(select max(budget) from movie);
+ mname 
+-------
+ Brave
+(1 row)
+
+3)   select mname from movie where mid in(select mid from movie_producer where pid in(select pid from producer where pname='Vedant'));
+ mname 
+-------
+ Don
+(1 row)
+
+
+2)   select aname,mname from actor,movie,actor_movie where actor.aid=actor_movie.aid and movie.mid=actor_movie.mid;
+  aname   | mname  
+----------+--------
+ Khan     | Dangalaname | mname | m_release_year |   acharges    
+-------+-------+----------------+---------------
+ Kumar | Ravan |           2014 | $5,000,000.00
+
+ Kapoor   | Don
+ Kumar    | Ravan
+ Dixit    | DDLJ
+ Deshmukh | Brave
+ Khan     | Don
+ Deshmukh | DDLJ
+(7 rows)
+
+
+1)  select aname from actor where aid in(select aid from actor_movie where mid in(select mid from actor_movie where aid in(select aid from actor where aname='Khan')));
+ aname  
+--------
+ Khan
+ Kapoor
+(2 rows)
+
+
+
+8)  select count(mid),sum(budget) from movie where m_release_year='2014';
+ count |   sum   
+-------+---------
+     1 | $900.00
+(1 row)
+
+
+7)  select aname,mname,m_release_year,acharges from actor,movie,actor_movie where actor_movie.aid=actor.aid and movie.mid=actor_movie.mid and acharges=(select max(acharges) from actor_movie);
+
+aname | mname | m_release_year |   acharges    
+-------+-------+----------------+---------------
+ Kumar | Ravan |           2014 | $5,000,000.00
+
+---------------------------------------------------------------------------------------------------------------------------------------------
+
+	STORED FUNCTIONS
+
+Q1)create or replace function charges1() returns int as
+'Declare
+	mon money;
+	m text;
+Begin
+	for mon,m in select acharges,mname from actor,movie,actor_movie where actor.aid=actor_movie.aid and movie.mid=actor_movie.mid and actor.aname=''Khan'' group by mname,acharges
+loop
+	raise notice ''chaeges % mname %'',mon,m;
+end loop;
+return 1;
+End;
+'
+	language 'plpgsql';
+
+  
+bcasy56=> create or replace function charges1() returns int as
+bcasy56-> 'Declare
+bcasy56'> mon money;
+bcasy56'> m text;
+bcasy56'> Begin
+bcasy56'> for mon,m in select acharges,mname from actor,movie,actor_movie where actor.aid=actor_movie.aid and movie.mid=actor_movie.mid and actor.aname=''Khan'' group by mname,acharges
+bcasy56'> loop
+bcasy56'> raise notice ''chaeges % mname %'',mon,m;
+bcasy56'> end loop;
+bcasy56'> return 1;
+bcasy56'> End;
+bcasy56'> '
+bcasy56-> language 'plpgsql';
+CREATE FUNCTION
+bcasy56=> select charges1();
+NOTICE:  chaeges $400,000.00 mname Dangal
+NOTICE:  chaeges $3,000,000.00 mname Don
+ charges1 
+----------
+        1
+(1 row)
+
+
+create or replace function ppp(text) returns text as
+'
+declare
+name text;
+cnt int;
+begin
+for name in select mname from movie,movie_producer,producer where movie.mid=movie_producer.mid and producer.pid=movie_producer.pid and producer.pname=$1
+loop
+select into cnt count(aname) from actor,movie,actor_movie where actor_movie.aid=actor.aid and actor_movie.mid=movie.mid and mname=name;
+raise notice ''movie name is % and count is %'',name,cnt;
+end loop;
+return name;
+end;
+'
+language 'plpgsql' 
+
+output:
+create or replace function ppp(text) returns text as
+bcasy56-> '
+bcasy56'> declare
+bcasy56'> name text;
+bcasy56'> cnt int;
+bcasy56'> begin
+bcasy56'> for name in select mname from movie,movie_producer,producer where movie.mid=movie_producer.mid and producer.pid=movie_producer.pid and producer.pname=$1
+bcasy56'> loop
+bcasy56'> select into cnt count(aname) from actor,movie,actor_movie where actor_movie.aid=actor.aid and actor_movie.mid=movie.mid and mname=name;
+bcasy56'> raise notice ''movie name is % and count is %'',name,cnt;
+bcasy56'> end loop;
+bcasy56'> return name;
+bcasy56'> end;
+bcasy56'> '
+bcasy56-> language 'plpgsql';
+CREATE FUNCTION
+bcasy56=> select ppp('Varad');
+NOTICE:  movie name is DDLJ and count is 2
+ ppp  
+------
+ DDLJ
+(1 row)
+
+
+
+
+
+Q3)create or replace function abc(text) returns int as
+'
+declare
+tot text;
+begin
+for tot in select aname from actor,movie,actor_movie where actor.aid=actor_movie.aid and movie.mid=actor_movie.mid and mname=$1
+loop
+raise notice ''%'',tot;
+end loop;
+return 1;
+end;
+'
+language 'plpgsql';
+
+OUTPUT: 
+	create or replace function abc(text) returns text as
+	bcasy56-> '
+	bcasy56'> declare
+	bcasy56'> tot text;
+	bcasy56'> begin
+	bcasy56'> for tot in select aname from actor,movie,actor_movie where actor.aid=actor_movie.aid and 		movie.mid=actor_movie.mid and mname=$1
+	bcasy56'> loop
+	bcasy56'> raise notice ''%'',tot;
+	bcasy56'> end loop;
+	bcasy56'> return tot;
+	bcasy56'> end;
+	bcasy56'> '
+	bcasy56-> language 'plpgsql';	
+	CREATE FUNCTION		
+	bcasy56=> select abc('Don');
+NOTICE:  Khan
+NOTICE:  Kapoor
+  abc   
+--------
+ Kapoor
+(1 row)
+
+
+
+
+
+
+
+
+
+
+
+---------------------------------------------------------------------------------------------------------------------
+
+	VIEWS
+
+Q1)  create or replace view producer_view as select pname from producer where pid in(select pid from movie_producer where mid in(select mid from movie_producer where pid in(select pid from producer where pname='Anish')))
+
+output:
+	create or replace view producer_view as select pname from producer where pid in(select pid from 	movie_producer where mid in(select mid from movie_producer where pid in(select pid from producer where pname='Anish')));
+	CREATE VIEW
+	bcasy56=> select * from producer_view;
+	  pname   
+	----------
+	 Anish
+	 Vrushank
+	(2 rows)
+
+
+
+
+Q2) create or replace view city_view as select * from actor where aadd<>'Mumbai' and aadd<>'Nashik'
+
+	output:
+	create or replace view city_view as select * from actor where aadd<>'Mumbai' and aadd<>'Nashik';
+	CREATE VIEW
+	bcasy56=> select * from city_view;
+	 aid |  aname   | arole | aadd 
+	-----+----------+-------+------
+	   3 | Kumar    | Hero  | Pune
+	   4 | Dixit    | Hero  | Pune
+	   5 | Deshmukh | Hero  | Pune
+	(3 rows)
+
+Q3) create or replace view actor_view as select aname,mname from actor,movie,actor_movie where actor.aid=actor_movie.aid and movie.mid=actor_movie.mid
+
+output:
+	create or replace view actor_view as select aname,mname from actor,movie,actor_movie where actor.aid=actor_movie.aid and movie.mid=actor_movie.mid;
+	CREATE VIEW
+	bcasy56=> select * from actor_view;
+	  aname   | mname  
+	----------+--------
+	 Khan     | Dangal
+	 Kapoor   | Don
+	 Khan     | Don
+	 Kumar    | Ravan
+	 Deshmukh | DDLJ
+	 Dixit    | DDLJ	
+	 Deshmukh | Brave
+	(7 rows)
+
+
+
+
+
+
+
+
+
+
+
+
+
+-----------------------------------------------------------------------------------------------------------------
+
+	ERRORS AND EXCEPTION
+
+create or replace function ac(text) returns text as
+'
+declare
+name text;
+cnt int;
+mov text;
+begin
+cnt:=0;
+select into mov mname from movie where mname=$1;
+if not found then
+raise exception ''Movie name is invalid'';
+end if;
+for name in select aname from actor,movie,actor_movie where actor.aid=actor_movie.aid and movie.mid=actor_movie.mid and movie.mname=$1 
+loop
+cnt=cnt+1;
+raise notice ''Actor name is %'',name;
+end loop;
+raise notice ''Count of actor is %s'',cnt;
+return 1;
+end;
+'
+language 'plpgsql'; 
+
+output:
+	select ac('Don');
+	NOTICE:  Actor name isKhan
+	NOTICE:  Actor name isKapoor
+	NOTICE:  Count of actor is 2s
+	 ac 
+	----
+	 1
+	(1 row)
+
+create or replace function shub(text) returns text as
+'
+declare
+mnme text;
+acnt int;
+ppname text;
+begin
+select into ppname pname from producer where pname=$1;
+if not found then
+raise exception ''No such producer'';
+end if;
+for mnme in select mname from movie,actor,producer,movie_producer,actor_movie where movie.mid=movie_producer.mid and producer.pid=movie_producer.pid and ppname=$1 group by mname
+loop
+select into acnt count(aname) from actor,actor_movie,movie where actor_movie.aid=actor.aid and actor_movie.mid=movie.mid and mname=mnme;
+end loop;
+return 1;
+end;
+'
+ language 'plpgsql'
+output
+create or replace function shub(text) returns text as
+bcasy56-> '
+bcasy56'> declare
+bcasy56'> mnme text;
+bcasy56'> acnt int;
+bcasy56'> ppname text;
+bcasy56'> begin
+bcasy56'> select into ppname pname from producer where pname=$1;
+bcasy56'> if not found then
+bcasy56'> raise exception ''No such producer'';
+bcasy56'> end if;
+bcasy56'> for mnme in select mname from movie,actor,producer,movie_producer,actor_movie where movie.mid=movie_producer.mid and producer.pid=movie_producer.pid and ppname=$1 group by mname
+bcasy56'> loop
+bcasy56'> select into acnt count(aname) from actor,actor_movie,movie where actor_movie.aid=actor.aid and actor_movie.mid=movie.mid and mname=mnme;
+bcasy56'> end loop;
+bcasy56'> return 1;
+bcasy56'> end;
+bcasy56'> '
+bcasy56->  language 'plpgsql';
+CREATE FUNCTION
+bcasy56=> select shub('Varad');
+ shub 
+------
+ 1
+(1 row)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+---------------------------------------------------------------------------------------------------------------------
+
+	CURSOR AND TRIGGERS
+
+create or replace function bud() returns trigger as 
+'
+begin
+if(new.budget<=''500'') then 
+raise notice ''Budget is invalid'';
+end if;
+return new;
+end;
+'
+language 'plpgsql'
+
+create trigger tri_bud before insert on movie for each row execute procedure bud()
+
+OUTPUT:
+
+	create or replace function bud() returns trigger as 
+	bcasy56-> '
+	bcasy56'> begin
+	bcasy56'> if(new.budget<=''500'') then 
+	bcasy56'> raise notice ''Budget is invalid'';
+	bcasy56'> end if;
+	bcasy56'> return new;
+	bcasy56'> end;	
+	bcasy56'> '
+	bcasy56-> language 'plpgsql';
+	CREATE FUNCTION
+	bcasy56=> create trigger tri_bud before insert on movie for each row execute procedure bud();
+	CREATE TRIGGER
+
+	insert into movie values('105','Robot','2018','200');
+	NOTICE:  Budget is invalid
+	INSERT 0 1
+
+create or replace function actor() returns int as
+'
+declare
+act text;
+scur cursor for select aname from actor where aid in(select aid from actor_movie group by aid having count(aid)>=all(select count(mid) from actor_movie group by aid));
+begin
+open scur;
+loop
+fetch scur into act;
+exit when not found;
+raise notice ''Actor names who acted in maximum number of movies is %'',act;
+end loop;
+close scur;
+return 1;
+end;
+'
+language 'plpgsql'
+
+OUTPUT:
+	create or replace function actor() returns int as
+	bcasy56-> '
+	bcasy56'> declare
+	bcasy56'> act text;
+	bcasy56'> scur cursor for select aname from actor where aid in(select aid from actor_movie group by aid 	having count(aid)>=all(select count(mid) from actor_movie group by aid));
+	bcasy56'> begin
+	bcasy56'> open scur;
+	bcasy56'> loop
+	bcasy56'> fetch scur into act;	
+	bcasy56'> exit when not found;
+	bcasy56'> raise notice ''Actor names who acted in maximum number of movies is %'',act;
+	bcasy56'> end loop;
+	bcasy56'> close scur;	
+	bcasy56'> return 1;
+	bcasy56'> end;
+	bcasy56'> '
+	bcasy56-> language 'plpgsql';
+	CREATE FUNCTION
+	bcasy56=> select actor();
+	NOTICE:  Actor names who acted in maximum number of movies is Khan
+	NOTICE:  Actor names who acted in maximum number of movies is Deshmukh
+	 actor 
+	-------	
+     	   1
+	(1 row)
+
+

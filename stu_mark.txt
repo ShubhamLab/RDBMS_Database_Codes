@@ -1,0 +1,440 @@
+
+
+	QUERIES
+
+Q1) select sname,sum(mark) from stu,subject,stu_sub where stu.sno=stu_sub.sno and subject.scode=stu_sub.scode group by sname order by sum(mark) desc limit 1;
+ sname | sum 
+-------+-----
+ Omkar | 422
+(1 row)
+
+
+Q2)  select * from subject;
+ scode | subname 
+-------+---------
+ 301   | DS
+ 302   | ARDBMS
+ 303   | SE
+ 304   | CN
+ 305   | CF
+ 306   | CO
+ 101   | C
+ 501   | JAVA
+(8 rows)
+
+Q3) select sclass,sname from stu group by sclass,sname order by sclass,sname;
+ sclass | sname  
+--------+--------
+ fy     | Amol
+ fy     | Arti
+ sy     | Omesh
+ sy     | Omkar
+ ty     | Varad
+ ty     | Vedant
+(6 rows)
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+	CURSORS AND TRIGGERS
+
+Q1) create or replace function cone(adr text) returns int as
+'
+declare
+scur cursor for select sname,subname,mark from stu,subject,stu_sub where stu.sno=stu_sub.sno and subject.scode=stu_sub.scode;
+name varchar(30);
+names varchar(30);
+mks int;
+begin
+open scur;
+loop
+fetch scur into name,names,mks;
+exit when not found;
+raise notice ''% % %'',name,names,mks;
+end loop;
+close scur;
+return 1;
+end;
+'
+language 'plpgsql'
+
+output:
+select cone('Pune');
+NOTICE:  Omkar DS 60
+NOTICE:  Omkar ARDBMS 80
+NOTICE:  Omkar SE 50
+NOTICE:  Omkar CN 70
+NOTICE:  Omkar CF 86
+NOTICE:  Omkar CO 76
+NOTICE:  Omesh DS 60
+NOTICE:  Omesh ARDBMS 40
+NOTICE:  Omesh SE 50
+NOTICE:  Omesh CN 70
+NOTICE:  Omesh CF 46
+NOTICE:  Omesh CO 56
+NOTICE:  Amol C 60
+NOTICE:  Arti C 80
+NOTICE:  Vedant JAVA 70
+NOTICE:  Varad JAVA 80
+ cone 
+------
+    1
+(1 row)
+
+
+Q2) create or replace function ctwo() returns int as
+'
+declare
+scur cursor for select sclass,sname,sum(mark) from stu,subject,stu_sub where stu.sno=stu_sub.sno and subject.scode=stu_sub.scode group by sclass,sname order by sclass,sname;
+name varchar(30);
+class varchar(30);
+mks int;
+begin
+open scur;
+
+
+loop
+fetch scur into class,name,mks;
+exit when not found;
+raise notice ''Class name is %, name of the student is %, marks of student is %'',class,name,mks;
+end loop;
+close scur;
+return 1;
+end;
+'
+language 'plpgsql'
+output:
+
+select ctwo();
+NOTICE:  Class name is fy, name of the student is Amol, marks of student is 60
+NOTICE:  Class name is fy, name of the student is Arti, marks of student is 80
+NOTICE:  Class name is sy, name of the student is Omesh, marks of student is 322
+NOTICE:  Class name is sy, name of the student is Omkar, marks of student is 422
+NOTICE:  Class name is ty, name of the student is Varad, marks of student is 80
+NOTICE:  Class name is ty, name of the student is Vedant, marks of student is 70
+ ctwo 
+------
+    1
+(1 row)
+
+
+Q3) create or replace function tone() returns trigger as
+'
+begin
+raise notice ''Deleting student data'';
+return old;
+end;
+'
+language 'plpgsql'
+
+create trigger tri_tone before delete on stu for each row execute procedure tone() 
+
+output:
+delete from stu where sno=1;
+NOTICE:  Deleting student data
+DELETE 0
+Correct output:
+alter table stu_sub drop constraint stu_sub_scode_fkey;
+ALTER TABLE
+bcasy56=> \d stu_sub
+           Table "public.stu_sub"
+ Column |         Type          | Modifiers 
+--------+-----------------------+-----------
+ sno    | integer               | not null
+ scode  | character varying(10) | not null
+ mark   | integer               | 
+Indexes:
+    "stu_sub_pkey" PRIMARY KEY, btree (sno, scode)
+Foreign-key constraints:
+    "stu_sub_sno_fkey" FOREIGN KEY (sno) REFERENCES stu(sno)
+
+bcasy56=> alter table stu_sub add constraint stu_sub_scode_fkey foreign key (scode) references subject(scode) on update no action on delete cascased;
+ERROR:  syntax error at or near "cascased"
+LINE 1: ...ences subject(scode) on update no action on delete cascased;
+                                                              ^
+bcasy56=> alter table stu_sub add constraint stu_sub_scode_fkey foreign key (scode) references subject(scode) on update no action on delete cascade;
+ALTER TABLE
+bcasy56=> \d stu_sub
+           Table "public.stu_sub"
+ Column |         Type          | Modifiers 
+--------+-----------------------+-----------
+ sno    | integer               | not null
+ scode  | character varying(10) | not null
+ mark   | integer               | 
+Indexes:
+    "stu_sub_pkey" PRIMARY KEY, btree (sno, scode)
+Foreign-key constraints:
+    "stu_sub_scode_fkey" FOREIGN KEY (scode) REFERENCES subject(scode) ON DELETE CASCADE
+    "stu_sub_sno_fkey" FOREIGN KEY (sno) REFERENCES stu(sno)
+
+bcasy56=> alter table stu_sub drop constraint stu_sub_sno_fkey;
+ALTER TABLE
+bcasy56=> alter table stu_sub add constraint stu_sub_sno_fkey foreign key (sno) references stu(sno) on update no action on delete cascade;
+ALTER TABLE
+bcasy56=> \d stu_sub
+           Table "public.stu_sub"
+ Column |         Type          | Modifiers 
+--------+-----------------------+-----------
+ sno    | integer               | not null
+ scode  | character varying(10) | not null
+ mark   | integer               | 
+Indexes:
+    "stu_sub_pkey" PRIMARY KEY, btree (sno, scode)
+Foreign-key constraints:
+    "stu_sub_scode_fkey" FOREIGN KEY (scode) REFERENCES subject(scode) ON DELETE CASCADE
+    "stu_sub_sno_fkey" FOREIGN KEY (sno) REFERENCES stu(sno) ON DELETE CASCADE
+
+bcasy56=> select * from stiudent
+bcasy56-> ;
+ERROR:  relation "stiudent" does not exist
+LINE 1: select * from stiudent
+                      ^
+bcasy56=> select * from stu;
+ sno | sname  | sclass | saddr  
+-----+--------+--------+--------
+   2 | Arti   | fy     | Pune
+   3 | Omkar  | sy     | Pune
+   4 | Omesh  | sy     | Pune
+   5 | Vedant | ty     | Pune
+   6 | Varad  | ty     | Mumbai
+(5 rows)
+
+bcasy56=> select * from stu_sub;
+ sno | scode | mark 
+-----+-------+------
+   3 | 301   |   60
+   3 | 302   |   80
+   3 | 303   |   50
+   3 | 304   |   70
+   3 | 305   |   86
+   3 | 306   |   76
+   4 | 301   |   60
+   4 | 302   |   40
+   4 | 303   |   50
+   4 | 304   |   70
+   4 | 305   |   46
+   4 | 306   |   56
+   2 | 101   |   80
+   5 | 501   |   70
+   6 | 501   |   80
+(15 rows)
+
+bcasy56=> delete from stu where sno=3;
+NOTICE:  Deleting student data
+DELETE 1
+bcasy56=> select * from stu;
+ sno | sname  | sclass | saddr  
+-----+--------+--------+--------
+   2 | Arti   | fy     | Pune
+   4 | Omesh  | sy     | Pune
+   5 | Vedant | ty     | Pune
+   6 | Varad  | ty     | Mumbai
+(4 rows)
+
+
+
+Q4) create or replace function ttwo() returns trigger as
+'
+begin
+if new.mark<0 or new.mark>100 then
+raise notice ''Marks should be never <0 or mark should be never >100'';
+end if;
+return null;
+end;
+'
+language 'plpgsql'
+
+create trigger tri_ttwo before insert on stu_sub for each row execute procedure ttwo()
+
+output:
+insert into stu_sub values(3,'101',110);
+NOTICE:  Marks should be never <0 or mark should be never >100
+INSERT 0 0
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+	VIEWS
+
+Q1) create view vone as select sname,sclass,sum(mark) from stu,subject,stu_sub where stu.sno=stu_sub.sno and subject.scode=stu_sub.scode group by sname,sclass order by sname,sclass
+
+output:
+select * from vone;
+ sname  | sclass | sum 
+--------+--------+-----
+ Amol   | fy     |  60
+ Arti   | fy     |  80
+ Omesh  | sy     | 322
+ Omkar  | sy     | 422
+ Varad  | ty     |  80
+ Vedant | ty     |  70
+(6 rows)
+
+
+Q2)  create view vtwo as select sname,subname,mark from stu,subject,stu_sub where stu.sno=stu_sub.sno and subject.scode=stu_sub.scode and mark>40 order by sname,sclass
+
+output:
+select * from vtwo;
+ sname  | subname | mark 
+--------+---------+------
+ Amol   | C       |   60
+ Arti   | C       |   80
+ Omesh  | CF      |   46
+ Omesh  | SE      |   50
+ Omesh  | DS      |   60
+ Omesh  | CO      |   56
+ Omesh  | CN      |   70
+ Omkar  | DS      |   60
+ Omkar  | ARDBMS  |   80
+ Omkar  | SE      |   50
+ Omkar  | CN      |   70
+ Omkar  | CF      |   86
+ Omkar  | CO      |   76
+ Varad  | JAVA    |   80
+ Vedant | JAVA    |   70
+(15 rows)
+
+
+Q3) create view vthree as select sname,sclass,saddr,subname,mark from stu,subject,stu_sub where sname='Omkar' and stu.sno=stu_sub.sno and subject.scode=stu_sub.scode
+
+output:
+select * from vthree;
+ sname | sclass | saddr | subname | mark 
+-------+--------+-------+---------+------
+ Omkar | sy     | Pune  | DS      |   60
+ Omkar | sy     | Pune  | ARDBMS  |   80
+ Omkar | sy     | Pune  | SE      |   50
+ Omkar | sy     | Pune  | CN      |   70
+ Omkar | sy     | Pune  | CF      |   86
+ Omkar | sy     | Pune  | CO      |   76
+(6 rows)
+
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+	STORED FUNCTION
+
+Q1) create or replace function fone(name text) returns int as
+'
+declare
+scur cursor for select sname,subname,mark from stu,subject,stu_sub where stu.sno=stu_sub.sno and subject.scode=stu_sub.scode;
+sname varchar(30);
+saddr varchar(20);
+subname varchar(20);
+mark float;
+begin
+open scur;
+loop
+fetch scur into sname,subname,mark;
+exit when not found;
+raise notice ''Name of student is:%, Subject name is %,marks is %'',sname,subname,mark;
+end loop;
+close scur;
+return 1;
+end;
+'
+language 'plpgsql'
+
+outpiut:
+select fone('Pune');
+NOTICE:  Name of student is:Omkar, Subject name is DS,marks is 60
+NOTICE:  Name of student is:Omkar, Subject name is ARDBMS,marks is 80
+NOTICE:  Name of student is:Omkar, Subject name is SE,marks is 50
+NOTICE:  Name of student is:Omkar, Subject name is CN,marks is 70
+NOTICE:  Name of student is:Omkar, Subject name is CF,marks is 86
+NOTICE:  Name of student is:Omkar, Subject name is CO,marks is 76
+NOTICE:  Name of student is:Omesh, Subject name is DS,marks is 60
+NOTICE:  Name of student is:Omesh, Subject name is ARDBMS,marks is 40
+NOTICE:  Name of student is:Omesh, Subject name is SE,marks is 50
+NOTICE:  Name of student is:Omesh, Subject name is CN,marks is 70
+NOTICE:  Name of student is:Omesh, Subject name is CF,marks is 46
+NOTICE:  Name of student is:Omesh, Subject name is CO,marks is 56
+NOTICE:  Name of student is:Amol, Subject name is C,marks is 60
+NOTICE:  Name of student is:Arti, Subject name is C,marks is 80
+NOTICE:  Name of student is:Vedant, Subject name is JAVA,marks is 70
+NOTICE:  Name of student is:Varad, Subject name is JAVA,marks is 80
+ fone 
+------
+    1
+(1 row)
+
+
+
+
+
+
+
+insert into stu values(1,'Amol','fy','Pune');
+INSERT 0 1
+bcasy56=> insert into stu values(2,'Arti','fy','Pune');
+INSERT 0 1
+bcasy56=> insert into stu values(3,'Omkar','sy','Pune');
+INSERT 0 1
+bcasy56=> insert into stu values(4,'Omesh','sy','Pune');
+INSERT 0 1
+bcasy56=> insert into stu values(5,'Vedant','ty','Pune');
+INSERT 0 1
+bcasy56=> insert into stu values(6,'Varad','ty','Mumbai');
+INSERT 0 1
+bcasy56=> insert into subject values('301','DS');
+INSERT 0 1
+bcasy56=> insert into subject values('302','ARDBMS');
+INSERT 0 1
+bcasy56=> insert into subject values('303','SE');
+INSERT 0 1
+bcasy56=> insert into subject values('304','CN');
+INSERT 0 1
+bcasy56=> insert into subject values('305','CF');
+INSERT 0 1
+bcasy56=> insert into subject values('306','CO');
+INSERT 0 1
+bcasy56=> insert into subject values('101','C');
+INSERT 0 1
+bcasy56=> insert into subject values('501','JAVA');
+INSERT 0 1
+bcasy56=> insert into stu_sub values(3,'301',60);
+INSERT 0 1
+bcasy56=> insert into stu_sub values(3,'302',80);
+INSERT 0 1
+bcasy56=> insert into stu_sub values(3,'303',50);
+INSERT 0 1
+bcasy56=> insert into stu_sub values(3,'304',70);
+INSERT 0 1
+bcasy56=> insert into stu_sub values(3,'305',86);
+INSERT 0 1
+bcasy56=> insert into stu_sub values(3,'306',76);
+INSERT 0 1
+bcasy56=> insert into stu_sub values(4,'301',60);
+INSERT 0 1
+bcasy56=> insert into stu_sub values(4,'302',40);
+INSERT 0 1
+bcasy56=> insert into stu_sub values(4,'303',50);
+INSERT 0 1
+bcasy56=> insert into stu_sub values(4,'304',70);
+INSERT 0 1
+bcasy56=> insert into stu_sub values(4,'305',46);
+INSERT 0 1
+bcasy56=> insert into stu_sub values(4,'306',56);
+INSERT 0 1
+bcasy56=> insert into stu_sub values(1,'101',60);
+INSERT 0 1
+bcasy56=> insert into stu_sub values(2,'101',80);
+INSERT 0 1
+bcasy56=> insert into stu_sub values(5,'501',70);
+INSERT 0 1
+bcasy56=> insert into stu_sub values(6,'501',80);
+INSERT 0 1
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
